@@ -2123,6 +2123,10 @@ class LunaSong : public Luna<Song> {
     lua_pushboolean(L, p->GetEnabled());
     return 1;
   }
+  static int SetEnabled(T* p, lua_State* L) {
+    p->SetEnabled(BArg(1));
+    COMMON_RETURN_SELF;
+  }
   static int IsCustomSong(T* p, lua_State* L) {
     lua_pushboolean(L, p->m_LoadedFromProfile != ProfileSlot_Invalid);
     return 1;
@@ -2357,6 +2361,7 @@ class LunaSong : public Luna<Song> {
     ADD_METHOD(GetSongFilePath);
     ADD_METHOD(IsTutorial);
     ADD_METHOD(IsEnabled);
+    ADD_METHOD(SetEnabled);
     ADD_METHOD(IsCustomSong);
     ADD_METHOD(GetGroupName);
     ADD_METHOD(MusicLengthSeconds);

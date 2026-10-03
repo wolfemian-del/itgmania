@@ -3444,6 +3444,9 @@ end
 		Returns the sync offset to be applied to this group. Returns -0.0009 if <code>ITG</code> or 0 (0ms) if <code>NULL</code>
 		If this is not set in the <code>Pack.ini</code>, the <code>DefaultSyncOffset</code> preference is used instead.
 	</Function>
+	<Function name='IsEnabled' return='bool' arguments='' since='ITGmania 1.4.0'>
+		Returns <code>false</code> if the pack's folder name is listed in the <code>DisabledGroups</code> preference.
+	</Function>
 	<Function name='HasPackIni' return='bool' arguments='' since='ITGmania 1.0.0'>
 		Returns <code>true</code> if the group has a Pack.ini file, <code>false</code> otherwise.
 	</Function>
@@ -5863,6 +5866,9 @@ local args = {
 	<Function name='IsEnabled' return='bool' arguments=''>
 		Returns <code>true</code> if the song is enabled.
 	</Function>
+	<Function name='SetEnabled' return='Song' arguments='bool bEnabled' since='ITGmania 1.4.0'>
+		Enables or disables the song in memory. Call <code>SONGMAN:SaveEnabledSongs()</code> to persist it in the <code>DisabledSongs</code> preference.
+	</Function>
 	<Function name='IsLong' return='bool' arguments=''>
 		Returns <code>true</code> if the song meets the criteria for a &quot;Long Version&quot;.
 	</Function>
@@ -5975,6 +5981,15 @@ local args = {
 	</Function>
 	<Function name='GetSongGroupBannerPath' return='string' arguments='string sGroup'>
 		Returns the path to the specified song group's banner.
+	</Function>
+	<Function name='SetGroupEnabled' return='SongManager' arguments='string sGroupName, bool bEnabled' since='ITGmania 1.4.0'>
+		Enables or disables a pack by folder name and saves the <code>DisabledGroups</code> preference. Disabled packs are hidden at once and are not loaded the next time songs are loaded; re-enabling a pack that was not loaded needs a song reload.
+	</Function>
+	<Function name='IsGroupEnabled' return='bool' arguments='string sGroupName' since='ITGmania 1.4.0'>
+		Returns <code>false</code> if the pack folder name is in <code>DisabledGroups</code> (case-insensitive).
+	</Function>
+	<Function name='SaveEnabledSongs' return='SongManager' arguments='' since='ITGmania 1.4.0'>
+		Writes the per-song enabled state to the <code>DisabledSongs</code> preference and saves preferences.
 	</Function>
 	<Function name='GetSeriesBannerPath' return='string' arguments='string sSeries'>
 		Returns the path to the specified series' banner.

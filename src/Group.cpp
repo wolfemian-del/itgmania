@@ -190,6 +190,12 @@ class LunaGroup : public Luna<Group> {
     return 1;
   }
 
+  static int IsEnabled(T* p, lua_State* L) {
+    lua_pushboolean(
+        L, SONGMAN == nullptr || SONGMAN->IsGroupEnabled(p->GetGroupName()));
+    return 1;
+  }
+
   static int GetBannerPath(T* p, lua_State* L) {
     lua_pushstring(L, p->GetBannerPath().c_str());
     return 1;
@@ -208,6 +214,7 @@ class LunaGroup : public Luna<Group> {
     ADD_METHOD(GetSeries);
     ADD_METHOD(GetSyncOffset);
     ADD_METHOD(HasPackIni);
+    ADD_METHOD(IsEnabled);
     ADD_METHOD(GetBannerPath);
     ADD_METHOD(GetYearReleased);
   }

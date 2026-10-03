@@ -165,6 +165,9 @@ int UnlockManager::SongIsLocked(const Song* pSong) const {
 
   if (!pSong->m_bEnabled) {
     iRet |= LOCKED_DISABLED;
+  } else if (
+      SONGMAN != nullptr && !SONGMAN->IsGroupEnabled(pSong->m_sGroupName)) {
+    iRet |= LOCKED_DISABLED;
   }
 
   return iRet;
