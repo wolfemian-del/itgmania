@@ -61,6 +61,18 @@ class SongManager {
   void SaveEnabledSongsToPref();
   void LoadEnabledSongsFromPref();
 
+  // Pack-level enable/disable (preference "DisabledGroups": pack folder
+  // names separated by ";", matched case-insensitively).
+  void LoadDisabledGroupsFromPref();
+  void SaveDisabledGroupsToPref();
+  bool IsGroupEnabled(const std::string& sGroupName) const;
+  // Updates the in-memory set, writes the preference and saves prefs to disk.
+  void SetGroupEnabled(const std::string& sGroupName, bool bEnabled);
+  // True if the pack folder name is in DisabledGroups (used to skip loading).
+  bool IsGroupDisabledByName(const std::string& sGroupName) const {
+    return !IsGroupEnabled(sGroupName);
+  }
+
   void LoadStepEditsFromProfileDir(
       const std::string& sProfileDir, ProfileSlot slot);
   void LoadCourseEditsFromProfileDir(
@@ -300,6 +312,8 @@ class SongManager {
                          // object
   // maps a series name to Series object
   std::map<std::string, Series> m_mapNameToSeries;
+  /** @brief Disabled pack folder names: lower-cased -> as written. */
+  std::map<std::string, std::string> m_mapDisabledGroups;
 
   struct Comp {
     bool operator()(const std::string& s, const std::string& t) const {

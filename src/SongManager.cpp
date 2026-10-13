@@ -87,6 +87,14 @@ static const ThemeMetric<int> EXTRA_STAGE2_DIFFICULTY_MAX(
     "SongManager", "ExtraStage2DifficultyMax");
 
 static Preference<std::string> g_sDisabledSongs("DisabledSongs", "");
+static Preference<std::string> g_sDisabledGroups("DisabledGroups", "");
+
+static std::string LowerGroupName(std::string s) {
+  if (!s.empty()) {
+    MakeLower(&s[0], s.size());
+  }
+  return s;
+}
 static Preference<bool> g_bHideIncompleteCourses(
     "HideIncompleteCourses", false);
 
@@ -277,6 +285,7 @@ void SongManager::InitSongsFromDisk(LoadingWindow* ld, bool onlyAdditions) {
   // an entry. -Kyz
   SONGINDEX->delay_save_cache = true;
   IMAGECACHE->delay_save_cache = true;
+  LoadDisabledGroupsFromPref();
   LoadSongDir(SpecialFiles::SONGS_DIR, ld, onlyAdditions);
   LoadEnabledSongsFromPref();
   SONGINDEX->SaveCacheIndex();
@@ -460,6 +469,14 @@ void SongManager::LoadSongDir(
       ld->SetText(
           SANITY_CHECKING_GROUPS.GetValue() +
           ssprintf("\n%s", Basename(sGroupDirName).c_str()));
+    }
+
+    // Packs listed in the DisabledGroups preference are not loaded at all.
+    if (!IsGroupEnabled(sGroupDirName)) {
+      LOG->Trace(
+          "Skipping disabled pack \"%s\" (DisabledGroups)",
+          sGroupDirName.c_str());
+      continue;
     }
 
     if (SanityCheckGroupDir(sDir + sGroupDirName)) {
@@ -1573,6 +1590,50 @@ void SongManager::LoadEnabledSongsFromPref() {
       pSong->SetEnabled(false);
     }
   }
+}
+
+void SongManager::LoadDisabledGroupsFromPref() {
+  m_mapDisabledGroups.clear();
+  std::vector<std::string> asDisabled;
+  split(g_sDisabledGroups, ";", asDisabled, true);
+  for (std::string& s : asDisabled) {
+    Trim(s);
+    if (s.empty()) {
+      continue;
+    }
+    m_mapDisabledGroups[LowerGroupName(s)] = s;
+  }
+}
+
+void SongManager::SaveDisabledGroupsToPref() {
+  std::vector<std::string> vs;
+  for (const auto& kv : m_mapDisabledGroups) {
+    vs.push_back(kv.second);
+  }
+  g_sDisabledGroups.Set(join(";", vs));
+}
+
+bool SongManager::IsGroupEnabled(const std::string& sGroupName) const {
+  if (m_mapDisabledGroups.empty()) {
+    return true;
+  }
+  return m_mapDisabledGroups.find(LowerGroupName(sGroupName)) ==
+         m_mapDisabledGroups.end();
+}
+
+void SongManager::SetGroupEnabled(
+    const std::string& sGroupName, bool bEnabled) {
+  std::string sKey = LowerGroupName(sGroupName);
+  if (sKey.empty()) {
+    return;
+  }
+  if (bEnabled) {
+    m_mapDisabledGroups.erase(sKey);
+  } else {
+    m_mapDisabledGroups[sKey] = sGroupName;
+  }
+  SaveDisabledGroupsToPref();
+  PREFSMAN->SavePrefsToDisk();
 }
 
 void SongManager::GetStepsLoadedFromProfile(
@@ -2761,6 +2822,20 @@ class LunaSongManager : public Luna<SongManager> {
   DEFINE_METHOD(DoesSongGroupExist, DoesSongGroupExist(SArg(1)));
   DEFINE_METHOD(DoesCourseGroupExist, DoesCourseGroupExist(SArg(1)));
 
+  static int SetGroupEnabled(T* p, lua_State* L) {
+    p->SetGroupEnabled(SArg(1), BArg(2));
+    COMMON_RETURN_SELF;
+  }
+  static int IsGroupEnabled(T* p, lua_State* L) {
+    lua_pushboolean(L, p->IsGroupEnabled(SArg(1)));
+    return 1;
+  }
+  static int SaveEnabledSongs(T* p, lua_State* L) {
+    p->SaveEnabledSongsToPref();
+    PREFSMAN->SavePrefsToDisk();
+    COMMON_RETURN_SELF;
+  }
+
   static int GetPopularSongs(T* p, lua_State* L) {
     const std::vector<Song*>& v = p->GetPopularSongs();
     LuaHelpers::CreateTableFromArray<Song*>(v, L);
@@ -2829,6 +2904,9 @@ class LunaSongManager : public Luna<SongManager> {
     ADD_METHOD(GetPreferredSortCourses);
     ADD_METHOD(GetSongGroupBannerPath);
     ADD_METHOD(GetSeriesBannerPath);
+    ADD_METHOD(SetGroupEnabled);
+    ADD_METHOD(IsGroupEnabled);
+    ADD_METHOD(SaveEnabledSongs);
     ADD_METHOD(GetCourseGroupBannerPath);
     ADD_METHOD(DoesSongGroupExist);
     ADD_METHOD(DoesCourseGroupExist);
