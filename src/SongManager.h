@@ -116,6 +116,10 @@ class SongManager {
   std::string GetSeriesBannerPath(std::string sSeriesName) const;
   // std::string GetSongGroupBackgroundPath( std::string sSongGroup ) const;
   void GetSongGroupNames(std::vector<std::string>& AddTo) const;
+  // Pack folder names found in the Songs directory on disk, plus any loaded
+  // group names, sorted and without duplicates. Unlike GetSongGroupNames this
+  // includes packs skipped via DisabledGroups (used by the toggle screen).
+  void GetAllPackFolderNames(std::vector<std::string>& AddTo) const;
   bool DoesSongGroupExist(std::string sSongGroup) const;
   bool HasPackIni(const std::string& sSongGroup) const;
   RageColor GetSongGroupColor(const std::string& sSongGroupName) const;

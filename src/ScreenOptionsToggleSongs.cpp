@@ -21,19 +21,23 @@ void ScreenOptionsToggleSongs::BeginScreen() {
 
   std::vector<OptionRowHandler*> vHands;
 
+  // Packs on disk (including ones skipped at load because they are disabled)
+  // plus loaded groups.
   std::vector<std::string> asAllGroups;
-  SONGMAN->GetSongGroupNames(asAllGroups);
+  SONGMAN->GetAllPackFolderNames(asAllGroups);
   for (const std::string& sGroup : asAllGroups) {
     vHands.push_back(OptionRowHandlerUtil::MakeNull());
     OptionRowDefinition& def = vHands.back()->m_Def;
 
     def.m_sName = sGroup;
-    def.m_sExplanationName = "Select Group";
+    def.m_sExplanationName = "Toggle Pack";
     def.m_bAllowThemeTitle = false;  // not themable
     def.m_bAllowThemeItems = false;  // already themed
     def.m_bOneChoiceForAllPlayers = true;
+    def.m_bExportOnChange = true;  // save each change to DisabledGroups at once
     def.m_vsChoices.clear();
-    def.m_vsChoices.push_back("");
+    def.m_vsChoices.push_back("On");
+    def.m_vsChoices.push_back("Off");
 
     m_asGroups.push_back(sGroup);
   }
@@ -54,14 +58,37 @@ void ScreenOptionsToggleSongs::ProcessMenuStart(const InputEventPlus& input) {
     return;
   }
 
+  // A pack that is not loaded (skipped via DisabledGroups, or not yet
+  // loaded) has no songs to list.
+  if (!SONGMAN->DoesSongGroupExist(m_asGroups[iRow])) {
+    SCREENMAN->PlayInvalidSound();
+    return;
+  }
+
   ToggleSongs::m_sGroup = m_asGroups[iRow];
   SCREENMAN->SetNewScreen("ScreenOptionsToggleSongsSubPage");
 }
 
 void ScreenOptionsToggleSongs::ImportOptions(
-    int row, const std::vector<PlayerNumber>& vpns) {}
+    int iRow, const std::vector<PlayerNumber>& vpns) {
+  if (iRow >= (int)m_asGroups.size()) {  // exit row
+    return;
+  }
+  bool bEnable = SONGMAN->IsGroupEnabled(m_asGroups[iRow]);
+  m_pRows[iRow]->SetOneSharedSelection(bEnable ? 0 : 1);
+}
+
 void ScreenOptionsToggleSongs::ExportOptions(
-    int row, const std::vector<PlayerNumber>& vpns) {}
+    int iRow, const std::vector<PlayerNumber>& vpns) {
+  if (iRow >= (int)m_asGroups.size()) {  // exit row
+    return;
+  }
+  bool bEnable = (m_pRows[iRow]->GetOneSharedSelection() == 0);
+  // Only write when changed; the screen exports every row when it closes.
+  if (bEnable != SONGMAN->IsGroupEnabled(m_asGroups[iRow])) {
+    SONGMAN->SetGroupEnabled(m_asGroups[iRow], bEnable);
+  }
+}
 
 // subpage (has the songs in a specific group)
 REGISTER_SCREEN_CLASS(ScreenOptionsToggleSongsSubPage);

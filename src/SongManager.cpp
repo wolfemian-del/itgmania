@@ -892,6 +892,25 @@ void SongManager::GetSongGroupNames(std::vector<std::string>& AddTo) const {
   AddTo.insert(AddTo.end(), m_sSongGroupNames.begin(), m_sSongGroupNames.end());
 }
 
+void SongManager::GetAllPackFolderNames(std::vector<std::string>& AddTo) const {
+  std::string sDir = SpecialFiles::SONGS_DIR;
+  if (Right(sDir, 1) != "/") {
+    sDir += "/";
+  }
+  std::vector<std::string> vsDirs;
+  GetDirListing(sDir + "*", vsDirs, true);
+  StripCvsAndSvn(vsDirs);
+  StripMacResourceForks(vsDirs);
+  // Also include loaded groups (e.g. from other song directories).
+  for (const std::string& s : m_sSongGroupNames) {
+    if (std::find(vsDirs.begin(), vsDirs.end(), s) == vsDirs.end()) {
+      vsDirs.push_back(s);
+    }
+  }
+  SortRStringArray(vsDirs);
+  AddTo.insert(AddTo.end(), vsDirs.begin(), vsDirs.end());
+}
+
 bool SongManager::DoesSongGroupExist(std::string sSongGroup) const {
   return find(m_sSongGroupNames.begin(), m_sSongGroupNames.end(), sSongGroup) !=
          m_sSongGroupNames.end();
