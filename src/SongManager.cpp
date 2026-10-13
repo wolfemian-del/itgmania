@@ -1390,8 +1390,6 @@ void SongManager::InitAutogenCourses() {
     m_pCourses.push_back(pCourse);
   }
 
-  std::vector<Song*> apCourseSongs = GetAllSongs();
-
   // Generate "All Songs" endless course.
   pCourse = new Course;
   CourseUtil::AutogenEndlessFromGroup("", Difficulty_Medium, *pCourse);
@@ -2162,7 +2160,6 @@ void SongManager::SetPreferredSongs(
   }
 
   PreferredSortSection section;
-  std::map<Song*, float> mapSongToPri;
 
   for (std::string sLine : asLines) {
     bool bSectionDivider = BeginsWith(sLine, "---");
@@ -2562,33 +2559,6 @@ int SongManager::GetNumStepsLoadedFromProfile() {
   }
 
   return iCount;
-}
-
-template <class T>
-int FindCourseIndexOfSameMode(T begin, T end, const Course* p) {
-  const PlayMode pm = p->GetPlayMode();
-
-  int n = 0;
-  for (T it = begin; it != end; ++it) {
-    if (*it == p) {
-      return n;
-    }
-
-    /* If it's not playable in this mode, don't increment. It might result in
-     * different output in different modes, but that's better than having holes.
-     */
-    if (!(*it)->IsPlayableIn(
-            GAMESTATE->GetCurrentStyle(GAMESTATE->GetMasterPlayerNumber())
-                ->m_StepsType)) {
-      continue;
-    }
-    if ((*it)->GetPlayMode() != pm) {
-      continue;
-    }
-    ++n;
-  }
-
-  return -1;
 }
 
 int SongManager::GetSongRank(Song* pSong) {
