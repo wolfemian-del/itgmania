@@ -252,10 +252,13 @@ void SongManager::Reload(bool bAllowFastLoad, LoadingWindow* ld) {
         PROFILEMAN->LoadProfileFromMemoryCard(pn, true);
         MEMCARDMAN->UnmountCard(pn);
       }
-    } else {
+    } else if (!profileID.empty()) {
       PROFILEMAN->m_sDefaultLocalProfileID[pn].Set(profileID);
       PROFILEMAN->LoadLocalProfileFromMachine(pn);
     }
+    // else: the player had no profile loaded (a guest). Rejoin them as a guest
+    // and leave the saved default profile alone; setting it to "" here used to
+    // erase DefaultLocalProfileID<N> from Preferences.ini.
     GAMESTATE->LoadCurrentSettingsFromProfile(pn);
   }
   UNLOCKMAN->Reload();
