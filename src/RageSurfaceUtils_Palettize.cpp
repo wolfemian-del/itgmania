@@ -290,7 +290,7 @@ void RageSurfaceUtils::Palettize(
     }
   }
 
-  delete acolormap;
+  free(acolormap);  // allocated with malloc in mediancut()
   delete[] thiserr;
   delete[] nexterr;
 
