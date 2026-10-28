@@ -1230,9 +1230,12 @@ void ScreenGameplay::SetupSong(int iSongIndex) {
     // Update attack bOn flags.
     pi->GetPlayerState()->Update(0);
 
-    // Hack: Course modifiers that are set to start immediately shouldn't tween
-    // on.
-    pi->GetPlayerState()->m_PlayerOptions.SetCurrentToLevel(ModsLevel_Stage);
+    // Course modifiers that are set to start immediately shouldn't tween on.
+    // Snap the current options to the song level (stage options plus the
+    // attacks that are now on), not the stage level: otherwise options that do
+    // not tween, such as the fail type, lose their course modifiers for a frame
+    // and e.g. a course with "failoff" can fail at the song change.
+    pi->GetPlayerState()->m_PlayerOptions.SetCurrentToLevel(ModsLevel_Song);
   }
 }
 
